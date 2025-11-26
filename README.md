@@ -1,5 +1,3 @@
-# MusicMap 🎵📍
-
 **Your music listening journey, mapped and private.**
 
 MusicMap is an iOS app that lets you log the songs you're listening to along with your location, creating a beautiful visual diary of your musical experiences across different places and times.
