@@ -29,14 +29,33 @@
             font-family: 'DM Sans', sans-serif;
             background: linear-gradient(180deg, 
                 var(--deep-night) 0%, 
-                var(--night) 30%, 
-                var(--sunset) 60%, 
-                var(--sunrise) 85%, 
+                var(--night) 25%, 
+                var(--sunset) 50%, 
+                var(--sunrise) 75%, 
                 var(--day) 100%);
-            background-size: 100% 400vh;
-            background-attachment: fixed;
+            background-size: 100% 100%;
+            background-attachment: scroll;
             color: var(--text-light);
             overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, 
+                var(--deep-night) 0%, 
+                var(--night) 20%, 
+                var(--sunset) 45%, 
+                var(--sunrise) 70%, 
+                var(--day) 100%);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         /* Header */
@@ -448,9 +467,9 @@
         <div class="header-content">
             <div class="logo-section">
                 <img src="logo.png" alt="Music Map Logo" class="logo-img">
-                <span class="logo-text">Music Map by Yacchi</span>
+                <span class="logo-text">Music Map</span>
             </div>
-            <a href="mailto:admin@yacchi.com" class="contact-link">Contact</a>
+            <a href="/cdn-cgi/l/email-protection#5031343d393e102931333338397e333f3d" class="contact-link">Contact</a>
         </div>
     </header>
 
@@ -539,7 +558,7 @@
         <div class="footer-content">
             <div class="contact-section">
                 <h3>Get In Touch</h3>
-                <a href="mailto:admin@yacchi.com" class="email-link">admin@yacchi.com</a>
+                <a href="/cdn-cgi/l/email-protection#4021242d292e003921232328296e232f2d" class="email-link"><span class="__cf_email__" data-cfemail="2a4b4e4743446a534b4949424304494547">[email&#160;protected]</span></a>
             </div>
             <p class="copyright">
                 © 2025 Yacchi. Music Map is available on the App Store.
@@ -547,7 +566,50 @@
         </div>
     </footer>
 
-    <script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Dynamic background color transition based on scroll
+        function updateBackgroundColor() {
+            const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+            const body = document.body;
+            
+            // Define color stops
+            const colors = [
+                { pos: 0, color: 'rgb(26, 51, 102)' },      // deep-night
+                { pos: 0.25, color: 'rgb(45, 62, 95)' },    // night
+                { pos: 0.5, color: 'rgb(255, 107, 107)' },  // sunset
+                { pos: 0.75, color: 'rgb(255, 140, 66)' },  // sunrise
+                { pos: 1, color: 'rgb(255, 217, 102)' }     // day
+            ];
+            
+            // Find the two colors to interpolate between
+            let color1, color2, localPercent;
+            for (let i = 0; i < colors.length - 1; i++) {
+                if (scrollPercent >= colors[i].pos && scrollPercent <= colors[i + 1].pos) {
+                    color1 = colors[i];
+                    color2 = colors[i + 1];
+                    localPercent = (scrollPercent - color1.pos) / (color2.pos - color1.pos);
+                    break;
+                }
+            }
+            
+            if (color1 && color2) {
+                // Parse RGB values
+                const rgb1 = color1.color.match(/\d+/g).map(Number);
+                const rgb2 = color2.color.match(/\d+/g).map(Number);
+                
+                // Interpolate
+                const r = Math.round(rgb1[0] + (rgb2[0] - rgb1[0]) * localPercent);
+                const g = Math.round(rgb1[1] + (rgb2[1] - rgb1[1]) * localPercent);
+                const b = Math.round(rgb1[2] + (rgb2[2] - rgb1[2]) * localPercent);
+                
+                body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            }
+        }
+        
+        // Update on scroll
+        window.addEventListener('scroll', updateBackgroundColor);
+        updateBackgroundColor(); // Initial call
+        
         // Smooth scroll behavior
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -585,15 +647,4 @@
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.style.animationPlayState = 'running';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.feature-card').forEach(card => {
-            card.style.animationPlayState = 'paused';
-            observer.observe(card);
-        });
-    </script>
-</body>
-</html>
+                    entry.target.style.animationPlayState =
