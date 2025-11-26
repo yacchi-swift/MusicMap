@@ -6,6 +6,10 @@ MusicMap is an iOS app that lets you log the songs you're listening to along wit
 
 ![App Icon](README_logo.png)
 
+## Download Link
+
+https://apps.apple.com/app/music-map-by-yacchi/id6755609085
+
 ## 🔒 Privacy First
 
 **Your data belongs to you. Period.**
@@ -108,10 +112,6 @@ The app calculates precise sunrise and sunset times for each logged location usi
 - Smooth color transitions during twilight periods
 
 This ensures that colors accurately represent whether it was light or dark at that specific place and time.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
 ## 🙏 Acknowledgments
 
