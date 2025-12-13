@@ -9,8 +9,8 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://apps.yacchi.com/MusicMap/">
     <meta property="og:title" content="Music Map by Yacchi">
-    <meta property="og:description" content="Capture the magic of where you were when that perfect song played. Beautiful location logging with solar time colors. Your data stays private on your device.">
-    <meta property="og:image" content="https://apps.yacchi.com/MusicMap/og-image.png">
+    <meta property="og:description" content="Log songs you're listening to and discover new music around you. Beautiful location tracking with album artwork and solar time colors. Your data stays private on your device.">
+    <meta property="og:image" content="https://apps.yacchi.com/MusicMap/ogimage.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     
@@ -18,11 +18,11 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://apps.yacchi.com/MusicMap/">
     <meta name="twitter:title" content="Music Map by Yacchi">
-    <meta name="twitter:description" content="Capture the magic of where you were when that perfect song played. Beautiful location logging with solar time colors. Your data stays private on your device.">
-    <meta name="twitter:image" content="https://apps.yacchi.com/MusicMap/og-image.png">
+    <meta name="twitter:description" content="Log songs you're listening to and discover new music around you. Beautiful location tracking with album artwork and solar time colors. Your data stays private on your device.">
+    <meta name="twitter:image" content="https://apps.yacchi.com/MusicMap/ogimage.png">
     
     <!-- General Meta -->
-    <meta name="description" content="Music Map - Log your music moments with location and solar time colors. Privacy-first iOS app with no tracking or servers.">
+    <meta name="description" content="Music Map - Log your music moments with location, discover songs around you with Cafe Mode, and explore with album artwork and solar time colors. Privacy-first iOS app.">
     
     <style>
         :root {
@@ -256,6 +256,8 @@
         .feature-card:nth-child(4) { animation-delay: 0.4s; }
         .feature-card:nth-child(5) { animation-delay: 0.5s; }
         .feature-card:nth-child(6) { animation-delay: 0.6s; }
+        .feature-card:nth-child(7) { animation-delay: 0.7s; }
+        .feature-card:nth-child(8) { animation-delay: 0.8s; }
 
         .feature-card:hover {
             transform: translateY(-10px);
@@ -285,6 +287,19 @@
             font-weight: 300;
         }
 
+        .feature-badge {
+            display: inline-block;
+            background: rgba(255, 140, 66, 0.3);
+            color: var(--sunrise);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         /* Privacy Section */
         .privacy {
             padding: 6rem 2rem;
@@ -311,6 +326,7 @@
             line-height: 1.8;
             opacity: 0.95;
             font-weight: 300;
+            margin-bottom: 2rem;
         }
 
         .privacy-highlight {
@@ -320,6 +336,42 @@
             border-radius: 8px;
             font-weight: 500;
             margin: 0 0.2rem;
+        }
+
+        .privacy-details {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .privacy-details h3 {
+            font-family: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--sunrise);
+        }
+
+        .privacy-details ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .privacy-details li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .privacy-details li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--sunrise);
+            font-weight: bold;
         }
 
         /* Footer */
@@ -355,6 +407,25 @@
         .email-link:hover {
             color: var(--sunset);
             transform: scale(1.05);
+        }
+
+        .footer-links {
+            margin: 2rem 0;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
         }
 
         .copyright {
@@ -429,6 +500,11 @@
             .feature-card {
                 padding: 2rem;
             }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
         }
 
         /* Color Timeline Visualization */
@@ -495,8 +571,8 @@
         <div class="hero-content">
             <h1>Your Musical Journey,<br>Mapped Through Time</h1>
             <p class="hero-subtitle">
-                Capture the magic of where you were when that perfect song played. 
-                Music Map beautifully logs your listening moments with location and solar time.
+                Log songs you're listening to and discover new music around you. 
+                Music Map beautifully captures your listening moments with location, album artwork, and solar time.
             </p>
             <a href="https://apps.apple.com/app/music-map-by-yacchi/id6755609085" class="cta-button">Download on the App Store</a>
         </div>
@@ -505,13 +581,40 @@
     <!-- Features Section -->
     <section class="features">
         <div class="features-container">
-            <h2 class="section-title">How It Works</h2>
+            <h2 class="section-title">Features</h2>
             <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-badge">New in v1.1</span>
+                    <span class="feature-icon">☕</span>
+                    <h3 class="feature-title">Cafe Mode</h3>
+                    <p class="feature-description">
+                        Discover songs playing around you automatically with ShazamKit. Perfect for cafes, restaurants, or anywhere you hear great music. Auto-discovery every 2 minutes, or tap "Discover Now" for instant recognition.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-badge">New in v1.1</span>
+                    <span class="feature-icon">🎨</span>
+                    <h3 class="feature-title">Album Artwork</h3>
+                    <p class="feature-description">
+                        Beautiful album covers for every logged song. Cafe Mode discoveries include artwork automatically, and songs from your library are saved with their album art for a rich visual experience.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-badge">New in v1.1</span>
+                    <span class="feature-icon">📍</span>
+                    <h3 class="feature-title">Songs Near Me</h3>
+                    <p class="feature-description">
+                        Sort your music logs by distance from your current location. Rediscover songs you heard in your neighborhood or find music from nearby locations you've visited.
+                    </p>
+                </div>
+
                 <div class="feature-card">
                     <span class="feature-icon">🎵</span>
                     <h3 class="feature-title">Instant Music Logging</h3>
                     <p class="feature-description">
-                        Tap one button while listening to music, and Music Map captures the song, artist, and your exact location in that moment.
+                        Tap one button while listening to music, and Music Map captures the song, artist, and your exact location in that moment. Build your personal musical diary effortlessly.
                     </p>
                 </div>
 
@@ -519,23 +622,16 @@
                     <span class="feature-icon">🌅</span>
                     <h3 class="feature-title">Solar Time Colors</h3>
                     <p class="feature-description">
-                        Each logged location is colored by the actual sunrise and sunset times for that place and time—from deep night blue to golden day.
+                        Each logged location is colored by the actual sunrise and sunset times for that place and time—from deep night blue to golden day, creating a beautiful visual timeline.
                     </p>
                 </div>
 
                 <div class="feature-card">
+                    <span class="feature-badge">New in v1.1</span>
                     <span class="feature-icon">🗺️</span>
-                    <h3 class="feature-title">Beautiful Map View</h3>
+                    <h3 class="feature-title">Smart Dynamic Map</h3>
                     <p class="feature-description">
-                        See all your music moments on an interactive map with time-of-day colored markers that tell your musical story.
-                    </p>
-                </div>
-
-                <div class="feature-card">
-                    <span class="feature-icon">📍</span>
-                    <h3 class="feature-title">Location-Aware</h3>
-                    <p class="feature-description">
-                        Every log includes precise coordinates and formatted timestamps, creating a rich timeline of your listening history.
+                        Map pins intelligently adapt to your zoom level. Zoom out for an overview with larger spacing, or zoom in to reveal detailed clusters of nearby songs. Perfect view at every zoom.
                     </p>
                 </div>
 
@@ -543,7 +639,7 @@
                     <span class="feature-icon">▶️</span>
                     <h3 class="feature-title">Quick Playback</h3>
                     <p class="feature-description">
-                        Tap any logged song to instantly play it from your Apple Music library or search for it in the Apple Music app.
+                        Tap any logged song to instantly play it from your Apple Music library or search for it in the Apple Music app. Relive every musical moment.
                     </p>
                 </div>
 
@@ -551,7 +647,7 @@
                     <span class="feature-icon">📱</span>
                     <h3 class="feature-title">Clean & Simple</h3>
                     <p class="feature-description">
-                        Beautifully designed for iOS 18 with an intuitive interface that gets out of the way and lets your music memories shine.
+                        Beautifully designed for iOS 18 with an intuitive interface that gets out of the way and lets your music memories shine through.
                     </p>
                 </div>
             </div>
@@ -561,12 +657,32 @@
     <!-- Privacy Section -->
     <section class="privacy">
         <div class="privacy-container">
-            <h2>Your Data Stays Yours</h2>
+            <h2>Privacy First, Always</h2>
             <p class="privacy-content">
                 Music Map is built with privacy at its core. 
-                <span class="privacy-highlight">All data stays on your device</span>—no servers, 
+                <span class="privacy-highlight">All your music logs stay on your device</span>—no servers, 
                 no tracking, no analytics. Your musical journey is yours alone.
             </p>
+            
+            <div class="privacy-details">
+                <h3>How Cafe Mode Protects Your Privacy</h3>
+                <ul>
+                    <li>Audio is never recorded or stored—only analyzed in real-time</li>
+                    <li>ShazamKit creates an irreversible "audio fingerprint" that cannot be converted back to audio</li>
+                    <li>Only the fingerprint is sent to Apple's servers for song matching</li>
+                    <li>Matched songs and metadata are saved locally on your device</li>
+                    <li>You control when Cafe Mode is active—turn it on or off anytime</li>
+                </ul>
+                
+                <h3 style="margin-top: 1.5rem;">Your Data, Your Control</h3>
+                <ul>
+                    <li>100% local storage—all music logs stored exclusively on your device</li>
+                    <li>No external servers—your data never leaves your device</li>
+                    <li>No iCloud sync—your music history stays completely private</li>
+                    <li>No analytics or tracking—we don't collect or analyze your information</li>
+                    <li>Built with Apple's native frameworks</li>
+                </ul>
+            </div>
         </div>
     </section>
 
@@ -577,6 +693,12 @@
                 <h3>Get In Touch</h3>
                 <a href="mailto:admin@yacchi.com" class="email-link">admin@yacchi.com</a>
             </div>
+            
+            <div class="footer-links">
+                <a href="privacypolicy.html">Privacy Policy</a>
+                <a href="privacypolicy-jp.html">プライバシーポリシー</a>
+            </div>
+            
             <p class="copyright">
                 © 2025 Yacchi. Music Map is available on the App Store.
             </p>
