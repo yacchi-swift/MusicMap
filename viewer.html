@@ -139,7 +139,16 @@
         .song-info-content {
             display: flex;
             gap: 16px;
-            align-items: center;
+            align-items: flex-start;
+        }
+
+        /* When no album art, make it full width */
+        .song-info-content:not(:has(.album-art.show)) {
+            flex-direction: column;
+        }
+
+        .song-info-content:not(:has(.album-art.show)) .song-details {
+            width: 100%;
         }
 
         /* Album Art */
@@ -186,9 +195,10 @@
         .song-details {
             flex: 1;
             min-width: 0;
+            width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
 
         .song-text {
@@ -220,40 +230,51 @@
             white-space: nowrap;
         }
 
-        /* Play Button - iOS Blue */
-        .play-button-container {
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-        }
-
+        /* Play Button - iOS Blue Rectangle */
         .play-button {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 50px;
-            height: 50px;
+            gap: 6px;
             background: var(--blue);
             color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
             cursor: pointer;
             text-decoration: none;
             transition: opacity 0.2s;
+            white-space: nowrap;
+            width: 100%;
         }
 
         .play-button:active {
             opacity: 0.7;
         }
 
-        .play-button svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
+        .play-button-icon {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .play-button-icon svg {
+            width: 12px;
+            height: 12px;
+            margin-left: 1px;
         }
 
         .play-button-text {
-            display: none;
+            display: block;
+            line-height: 1.2;
         }
 
         /* Location Details Card */
@@ -270,25 +291,17 @@
             display: flex;
         }
 
-        .detail-row {
+        .detail-header {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 8px;
         }
 
-        .detail-row svg {
+        .detail-icon {
             width: 15px;
             height: 15px;
-            margin-top: 2px;
             flex-shrink: 0;
             opacity: 0.6;
-        }
-
-        .detail-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
         }
 
         .detail-label {
@@ -445,12 +458,13 @@
                         <div class="song-name" id="songName"></div>
                         <div class="artist-name" id="artistName"></div>
                     </div>
-                </div>
-                <div class="play-button-container">
                     <a href="#" class="play-button" id="playButton" aria-label="Play Song">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M8 5v14l11-7z" fill="white"/>
-                        </svg>
+                        <div class="play-button-icon">
+                            <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 1.5L10 6L3 10.5V1.5Z" fill="#007AFF"/>
+                            </svg>
+                        </div>
+                        <span class="play-button-text">Play Song</span>
                     </a>
                 </div>
             </div>
@@ -458,24 +472,17 @@
 
         <!-- Location Details -->
         <div class="location-details-card">
-            <div class="detail-row">
-                <svg viewBox="0 0 24 24" fill="currentColor">
+            <div class="detail-header">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="detail-icon">
                     <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
                     <path d="M12 6v6l4 2"/>
                 </svg>
-                <div class="detail-content">
-                    <div class="detail-label">Date & Time</div>
-                    <div class="detail-value" id="dateTime"></div>
-                </div>
+                <div class="detail-label">Date & Time</div>
             </div>
-
-            <div class="detail-row">
-                <div class="detail-content" style="padding-left: 23px;">
-                    <div class="solar-time-display">
-                        <div class="solar-circle" id="solarCircle"></div>
-                        <div class="detail-value" id="solarTime"></div>
-                    </div>
-                </div>
+            <div class="detail-value" id="dateTime"></div>
+            <div class="solar-time-display">
+                <div class="solar-circle" id="solarCircle"></div>
+                <div class="detail-value" id="solarTime"></div>
             </div>
         </div>
     </div>
