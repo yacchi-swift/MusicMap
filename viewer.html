@@ -59,7 +59,6 @@
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
             z-index: 1000;
             padding: 0;
         }
@@ -67,7 +66,6 @@
         @media (prefers-color-scheme: dark) {
             .header {
                 background: rgba(0, 0, 0, 0.8);
-                border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
             }
         }
 
@@ -84,24 +82,6 @@
             font-size: 17px;
             font-weight: 600;
             letter-spacing: -0.4px;
-        }
-
-        .nav-button {
-            position: absolute;
-            right: 16px;
-            background: none;
-            border: none;
-            color: var(--blue);
-            font-size: 17px;
-            cursor: pointer;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .nav-button:active {
-            opacity: 0.5;
         }
 
         /* Content */
@@ -329,34 +309,6 @@
             border-radius: 50%;
             flex-shrink: 0;
         }
-
-        /* Copy Toast */
-        .copy-toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-size: 15px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-            z-index: 2000;
-        }
-
-        .copy-toast.show {
-            opacity: 1;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .copy-toast {
-                background: rgba(255, 255, 255, 0.85);
-                color: black;
-            }
-        }
     </style>
 
     <!-- Apple MapKit JS -->
@@ -367,12 +319,6 @@
     <div class="header">
         <div class="nav-bar">
             <div class="nav-title">Location Details</div>
-            <button class="nav-button" onclick="copyCoordinates()">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="12" r="2"/>
-                    <circle cx="12" cy="12" r="1" fill="white"/>
-                </svg>
-            </button>
         </div>
     </div>
 
@@ -419,9 +365,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Copy Toast -->
-    <div class="copy-toast" id="copyToast">Coordinates Copied</div>
 
     <script>
         // Parse URL parameters
@@ -505,35 +448,6 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
-        }
-
-        // Copy coordinates
-        function copyCoordinates() {
-            const coords = `${params.lat}, ${params.lon}`;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(coords).then(() => {
-                    showToast();
-                });
-            } else {
-                // Fallback for older browsers
-                const textarea = document.createElement('textarea');
-                textarea.value = coords;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showToast();
-            }
-        }
-
-        // Show copy toast
-        function showToast() {
-            const toast = document.getElementById('copyToast');
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2000);
         }
 
         // Fetch album artwork from iTunes Search API
