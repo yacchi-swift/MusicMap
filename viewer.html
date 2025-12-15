@@ -360,7 +360,7 @@
     </style>
 
     <!-- Apple MapKit JS -->
-    <script src="https://cdn.apple-mapkitjs.com/mk/5.x.x/mapkit.js"></script>
+    <script src="https://cdn.apple-mapkitjs.com/mk/5.x.x/mapkit.js" crossorigin></script>
 </head>
 <body>
     <!-- Header -->
@@ -619,6 +619,26 @@
 
         // Initialize Apple Maps
         async function initMap() {
+            // Wait for mapkit to load
+            if (typeof mapkit === 'undefined') {
+                // Wait up to 5 seconds for mapkit to load
+                let attempts = 0;
+                while (typeof mapkit === 'undefined' && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (typeof mapkit === 'undefined') {
+                    console.error('MapKit JS failed to load');
+                    document.getElementById('map').innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--secondary-label); font-size: 15px;">
+                            Map Unavailable
+                        </div>
+                    `;
+                    return;
+                }
+            }
+            
             try {
                 mapkit.init({
                     authorizationCallback: function(done) {
