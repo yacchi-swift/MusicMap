@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-itunes-app" content="app-id=6755609085">
+    <title>Location Details</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --deep-night: #1a3366;
+            --before-sunrise: #4a6fa5;
+            --sunrise: #ff8c42;
+            --day: #ffd966;
+            --before-sunset: #ff9a56;
+            --sunset: #ff6b6b;
+            --night: #2d3e5f;
+            --system-gray6: #f2f2f7;
+            --label-color: #000000;
+            --secondary-label: #3c3c43;
+            --blue: #007AFF;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --system-gray6: #1c1c1e;
+                --label-color: #ffffff;
+                --secondary-label: #ebebf5;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            background: #ffffff;
+            color: var(--label-color);
+            overflow-x: hidden;
+            min-height: 100vh;
+            max-width: 430px;
+            margin: 0 auto;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #000000;
+            }
+        }
+
+        /* Header - iOS style */
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .header {
+                background: rgba(0, 0, 0, 0.8);
+                border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        .nav-bar {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 0 16px;
+        }
+
+        .nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.4px;
+        }
+
+        .nav-button {
+            position: absolute;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--blue);
+            font-size: 17px;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-button:active {
+            opacity: 0.5;
+        }
+
+        /* Content */
+        .scroll-content {
+            padding: 20px;
+        }
+
+        /* Map */
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--system-gray6);
+            margin-bottom: 20px;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            margin-bottom: 12px;
+            color: var(--label-color);
+        }
+
+        /* Song Information Card */
+        .song-info-card {
+            background: var(--system-gray6);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .song-info-content {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        /* Album Art */
+        .album-art {
+            flex-shrink: 0;
+            display: none; /* Hidden by default, shown when image loads */
+        }
+
+        .album-art.show {
+            display: block;
+        }
+
+        .album-art img,
+        .album-art .placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .album-art .placeholder {
+            background: rgba(128, 128, 128, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .album-art .placeholder svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        .album-art .placeholder svg path {
+            fill: #999999;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .album-art .placeholder svg path {
+                fill: #cccccc;
+            }
+        }
+
+        /* Song Details */
+        .song-details {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .song-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .song-name {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.4px;
+            color: var(--label-color);
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .artist-name {
+            font-size: 15px;
+            color: var(--secondary-label);
+            opacity: 0.6;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Play Button - iOS Blue */
+        .play-button-container {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .play-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .play-button:active {
+            opacity: 0.7;
+        }
+
+        .play-button svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .play-button-text {
+            display: none;
+        }
+
+        /* Location Details Card */
+        .location-details-card {
+            background: var(--system-gray6);
+            border-radius: 12px;
+            padding: 16px;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .location-details-card.show {
+            display: flex;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .detail-row svg {
+            width: 15px;
+            height: 15px;
+            margin-top: 2px;
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+
+        .detail-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: var(--secondary-label);
+            opacity: 0.6;
+        }
+
+        .detail-value {
+            font-size: 17px;
+            color: var(--label-color);
+            line-height: 1.4;
+        }
+
+        /* Solar Time Display */
+        .solar-time-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .solar-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Copy Toast */
+        .copy-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 15px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 2000;
+        }
+
+        .copy-toast.show {
+            opacity: 1;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .copy-toast {
+                background: rgba(255, 255, 255, 0.85);
+                color: black;
+            }
+        }
+
+        /* App Store Banner - Only on iOS */
+        .app-banner {
+            display: none;
+            background: var(--system-gray6);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 16px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-banner.show {
+            display: flex;
+        }
+
+        .app-banner-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+        }
+
+        .app-banner-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .app-banner-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .app-banner-subtitle {
+            font-size: 12px;
+            color: var(--secondary-label);
+            opacity: 0.6;
+        }
+
+        .app-banner-button {
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 6px 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .app-banner {
+                border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
+
+    <!-- Apple MapKit JS -->
+    <script src="https://cdn.apple-mapkitjs.com/mk/5.x.x/mapkit.js"></script>
+</head>
+<body>
+    <!-- App Store Banner (iOS only) -->
+    <div class="app-banner" id="appBanner">
+        <div class="app-banner-icon"></div>
+        <div class="app-banner-info">
+            <div class="app-banner-title">Music Map by Yacchi</div>
+            <div class="app-banner-subtitle">Open in app for full experience</div>
+        </div>
+        <a href="https://apps.apple.com/app/music-map-by-yacchi/id6755609085" class="app-banner-button">VIEW</a>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="nav-bar">
+            <div class="nav-title">Location Details</div>
+            <button class="nav-button" onclick="copyCoordinates()">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="12" r="1" fill="white"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="scroll-content">
+        <!-- Map -->
+        <div id="map"></div>
+
+        <!-- Song Information -->
+        <div class="section-title">Song Information</div>
+        <div class="song-info-card">
+            <div class="song-info-content">
+                <div class="album-art" id="albumArt"></div>
+                <div class="song-details">
+                    <div class="song-text">
+                        <div class="song-name" id="songName"></div>
+                        <div class="artist-name" id="artistName"></div>
+                    </div>
+                </div>
+                <div class="play-button-container">
+                    <a href="#" class="play-button" id="playButton" aria-label="Play Song">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 5v14l11-7z" fill="white"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Details -->
+        <div class="location-details-card">
+            <div class="detail-row">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                <div class="detail-content">
+                    <div class="detail-label">Date & Time</div>
+                    <div class="detail-value" id="dateTime"></div>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div class="detail-content" style="padding-left: 23px;">
+                    <div class="solar-time-display">
+                        <div class="solar-circle" id="solarCircle"></div>
+                        <div class="detail-value" id="solarTime"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy Toast -->
+    <div class="copy-toast" id="copyToast">Coordinates Copied</div>
+
+    <script>
+        // Parse URL parameters
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                song: params.get('song') || 'Unknown Song',
+                artist: params.get('artist') || 'Unknown Artist',
+                lat: parseFloat(params.get('lat')) || 35.6762,
+                lon: parseFloat(params.get('lon')) || 139.6503,
+                date: params.get('date') || null, // Don't default to current date
+                solarTime: params.get('solarTime') || 'day',
+                albumArt: params.get('albumArt') || null
+            };
+        }
+
+        const params = getUrlParams();
+
+        // Solar time color mapping
+        const solarColors = {
+            'deep-night': '#1a3366',
+            'before-sunrise': '#4a6fa5',
+            'sunrise': '#ff8c42',
+            'day': '#ffd966',
+            'before-sunset': '#ff9a56',
+            'sunset': '#ff6b6b',
+            'night': '#2d3e5f'
+        };
+
+        // Solar time name mapping
+        const solarNames = {
+            'deep-night': 'Deep Night',
+            'before-sunrise': 'Before Sunrise',
+            'sunrise': 'Sunrise',
+            'day': 'Day',
+            'before-sunset': 'Before Sunset',
+            'sunset': 'Sunset',
+            'night': 'Night'
+        };
+
+        // Format date iOS style
+        function formatDate(isoDate) {
+            const date = new Date(isoDate);
+            return date.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        // Create Apple Music URL
+        function getAppleMusicUrl(song, artist) {
+            const query = encodeURIComponent(`${song} ${artist}`);
+            return `https://music.apple.com/search?term=${query}`;
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Copy coordinates
+        function copyCoordinates() {
+            const coords = `${params.lat}, ${params.lon}`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(coords).then(() => {
+                    showToast();
+                });
+            } else {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = coords;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast();
+            }
+        }
+
+        // Show copy toast
+        function showToast() {
+            const toast = document.getElementById('copyToast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // Fetch album artwork from iTunes Search API
+        async function fetchArtworkFromItunes(song, artist) {
+            try {
+                const query = encodeURIComponent(`${song} ${artist}`);
+                const response = await fetch(
+                    `https://itunes.apple.com/search?term=${query}&entity=song&limit=1`
+                );
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    // Get high-resolution artwork (600x600)
+                    const artworkUrl = data.results[0].artworkUrl100;
+                    return artworkUrl.replace('100x100bb.jpg', '600x600bb.jpg');
+                }
+            } catch (error) {
+                console.error('Failed to fetch artwork from iTunes:', error);
+            }
+            return null;
+        }
+
+        // Check if iOS
+        function isIOS() {
+            return /iPhone|iPad|iPod/.test(navigator.userAgent);
+        }
+
+        // Initialize page
+        async function init() {
+            // Show app banner only on iOS
+            if (isIOS()) {
+                document.getElementById('appBanner').classList.add('show');
+            }
+
+            // Set song info
+            document.getElementById('songName').textContent = params.song;
+            document.getElementById('artistName').textContent = params.artist;
+            
+            // Set album art - only show if we have artwork
+            const albumArtContainer = document.getElementById('albumArt');
+            const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const svgFill = isDarkMode ? '#cccccc' : '#999999';
+            
+            // Try to get artwork URL
+            let artworkUrl = params.albumArt;
+            
+            // If no artwork URL provided, fetch from iTunes
+            // But only if we have real song and artist names (not defaults)
+            if (!artworkUrl && params.song !== 'Unknown Song' && params.artist !== 'Unknown Artist') {
+                artworkUrl = await fetchArtworkFromItunes(params.song, params.artist);
+            }
+            
+            // If we got an artwork URL, display it
+            if (artworkUrl) {
+                const img = document.createElement('img');
+                img.src = artworkUrl;
+                img.alt = params.song + ' album art';
+                img.onload = function() {
+                    // Show album art container when image loads successfully
+                    albumArtContainer.classList.add('show');
+                };
+                img.onerror = function() {
+                    // If image fails to load, don't show anything
+                    albumArtContainer.classList.remove('show');
+                };
+                albumArtContainer.innerHTML = '';
+                albumArtContainer.appendChild(img);
+            }
+            // else don't show album art at all (stays hidden)
+
+            // Set play button
+            document.getElementById('playButton').href = getAppleMusicUrl(params.song, params.artist);
+
+            // Only show date/time section if we have a date parameter
+            if (params.date) {
+                // Set date & time
+                document.getElementById('dateTime').textContent = formatDate(params.date);
+
+                // Set solar time
+                const solarColor = solarColors[params.solarTime] || solarColors['day'];
+                const solarName = solarNames[params.solarTime] || 'Day';
+                document.getElementById('solarCircle').style.background = solarColor;
+                document.getElementById('solarTime').textContent = solarName;
+                
+                // Show the location details card
+                document.querySelector('.location-details-card').classList.add('show');
+            }
+            // else don't show date/time section (stays hidden)
+
+            // Initialize map
+            initMap();
+        }
+
+        // Initialize Apple Maps
+        async function initMap() {
+            try {
+                mapkit.init({
+                    authorizationCallback: function(done) {
+                        done('YOUR_MAPKIT_TOKEN_HERE');
+                    }
+                });
+
+                const solarColor = solarColors[params.solarTime] || solarColors['day'];
+                
+                const map = new mapkit.Map("map", {
+                    center: new mapkit.Coordinate(params.lat, params.lon),
+                    region: new mapkit.CoordinateRegion(
+                        new mapkit.Coordinate(params.lat, params.lon),
+                        new mapkit.CoordinateSpan(0.01, 0.01)
+                    ),
+                    mapType: mapkit.Map.MapTypes.Standard,
+                    showsMapTypeControl: false,
+                    showsZoomControl: false,
+                    showsUserLocationControl: false,
+                    isRotationEnabled: false
+                });
+
+                // Create annotation
+                const coordinate = new mapkit.Coordinate(params.lat, params.lon);
+                const annotation = new mapkit.MarkerAnnotation(coordinate, {
+                    color: solarColor,
+                    title: params.song,
+                    glyphText: "♪"
+                });
+
+                map.addAnnotation(annotation);
+            } catch (error) {
+                console.error('Map error:', error);
+                document.getElementById('map').innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--secondary-label); font-size: 15px;">
+                        Map Unavailable
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize on load
+        (async () => {
+            await init();
+        })();
+    </script>
+</body>
+</html>
