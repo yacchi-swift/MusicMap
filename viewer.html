@@ -433,6 +433,7 @@
                 lat: parseFloat(params.get('lat')) || 35.6762,
                 lon: parseFloat(params.get('lon')) || 139.6503,
                 date: params.get('date') || null, // Don't default to current date
+                timezone: params.get('timezone') || null, // Timezone like "JST", "PST", "GMT+9"
                 solarTime: params.get('solarTime') || 'day',
                 albumArt: params.get('albumArt') || null
             };
@@ -462,17 +463,35 @@
             'night': 'Night'
         };
 
-        // Format date iOS style
-        function formatDate(isoDate) {
-            const date = new Date(isoDate);
-            return date.toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
+        // Format date - display exact time from parameter without conversion
+        function formatDate(isoDate, timezone) {
+            // Parse ISO date string manually to avoid timezone conversion
+            // Expected format: 2025-12-15T10:30:00Z or 2025-12-15T10:30:00
+            const datePart = isoDate.split('T')[0];
+            const timePart = isoDate.split('T')[1]?.split('.')[0]?.split('Z')[0] || '00:00:00';
+            
+            const [year, month, day] = datePart.split('-');
+            const [hours, minutes] = timePart.split(':');
+            
+            // Convert to 12-hour format
+            const hour24 = parseInt(hours);
+            const hour12 = hour24 === 0 ? 12 : (hour24 > 12 ? hour24 - 12 : hour24);
+            const ampm = hour24 >= 12 ? 'PM' : 'AM';
+            
+            // Month names
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthName = monthNames[parseInt(month) - 1];
+            
+            // Format: "December 15, 2025 at 10:30 AM JST"
+            let formatted = `${monthName} ${parseInt(day)}, ${year} at ${hour12}:${minutes} ${ampm}`;
+            
+            // Add timezone if provided
+            if (timezone) {
+                formatted += ` ${timezone}`;
+            }
+            
+            return formatted;
         }
 
         // Create Apple Music URL
@@ -581,7 +600,7 @@
             // Only show date/time section if we have a date parameter
             if (params.date) {
                 // Set date & time
-                document.getElementById('dateTime').textContent = formatDate(params.date);
+                document.getElementById('dateTime').textContent = formatDate(params.date, params.timezone);
 
                 // Set solar time
                 const solarColor = solarColors[params.solarTime] || solarColors['day'];
@@ -603,7 +622,7 @@
             try {
                 mapkit.init({
                     authorizationCallback: function(done) {
-                        done('YOUR_MAPKIT_TOKEN_HERE');
+                        done('eyJ0eXAiOiJKV1QiLCJraWQiOiIyODhUVUpKRlc1IiwiYWxnIjoiRVMyNTYifQ.eyJleHAiOjIwODExNDA3MzksImlzcyI6IkJYTENMUjI3N04iLCJpYXQiOjE3NjU3ODA3Mzl9.pYyqH1Z1-2D4orXQTkdubNY7kTQsUDHJrbpyRtUIOHeCDu6WOE_Yam2QFd0RFDf9xg_1dp3AQsZSEegahw6NTA');
                     }
                 });
 
