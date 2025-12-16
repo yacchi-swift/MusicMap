@@ -575,12 +575,71 @@
                     isRotationEnabled: false
                 });
 
-                // Create annotation
+                // Create custom annotation matching iOS DetailView design
                 const coordinate = new mapkit.Coordinate(params.lat, params.lon);
-                const annotation = new mapkit.MarkerAnnotation(coordinate, {
-                    color: solarColor,
+                
+                // Create SVG matching iOS pin: circle with gradient + white music note
+                const svgNS = "http://www.w3.org/2000/svg";
+                const svg = document.createElementNS(svgNS, "svg");
+                svg.setAttribute("width", "50");
+                svg.setAttribute("height", "50");
+                svg.setAttribute("viewBox", "0 0 50 50");
+                
+                // Create gradient definition
+                const defs = document.createElementNS(svgNS, "defs");
+                const gradient = document.createElementNS(svgNS, "linearGradient");
+                gradient.setAttribute("id", "pinGradient");
+                gradient.setAttribute("x1", "0%");
+                gradient.setAttribute("y1", "0%");
+                gradient.setAttribute("x2", "0%");
+                gradient.setAttribute("y2", "100%");
+                
+                const stop1 = document.createElementNS(svgNS, "stop");
+                stop1.setAttribute("offset", "0%");
+                stop1.setAttribute("stop-color", solarColor);
+                stop1.setAttribute("stop-opacity", "1");
+                
+                const stop2 = document.createElementNS(svgNS, "stop");
+                stop2.setAttribute("offset", "100%");
+                stop2.setAttribute("stop-color", solarColor);
+                stop2.setAttribute("stop-opacity", "0.8");
+                
+                gradient.appendChild(stop1);
+                gradient.appendChild(stop2);
+                defs.appendChild(gradient);
+                svg.appendChild(defs);
+                
+                // Create circle with gradient and shadow
+                const circle = document.createElementNS(svgNS, "circle");
+                circle.setAttribute("cx", "25");
+                circle.setAttribute("cy", "25");
+                circle.setAttribute("r", "25");
+                circle.setAttribute("fill", "url(#pinGradient)");
+                circle.setAttribute("filter", "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3))");
+                svg.appendChild(circle);
+                
+                // Create music note (♪) in white
+                const text = document.createElementNS(svgNS, "text");
+                text.setAttribute("x", "25");
+                text.setAttribute("y", "25");
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("dominant-baseline", "central");
+                text.setAttribute("fill", "white");
+                text.setAttribute("font-size", "20");
+                text.setAttribute("font-weight", "600");
+                text.textContent = "♪";
+                svg.appendChild(text);
+                
+                // Convert SVG to data URL
+                const svgString = new XMLSerializer().serializeToString(svg);
+                const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(svgString);
+                
+                // Create ImageAnnotation with custom SVG
+                const annotation = new mapkit.ImageAnnotation(coordinate, {
+                    url: { 1: svgDataUrl },
+                    anchorOffset: new DOMPoint(0, -25),
                     title: params.song,
-                    glyphText: "♪"
+                    subtitle: params.artist
                 });
 
                 map.addAnnotation(annotation);
