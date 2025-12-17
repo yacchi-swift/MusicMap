@@ -4,7 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-itunes-app" content="app-id=6755609085">
-    <title>Location Details</title>
+    <meta name="description" content="View your Music Map song location details with album artwork and solar time colors. See where and when you logged this song on an interactive map.">
+    <title>Music Map by Yacchi - Location Details</title>
+    
+    <!-- Open Graph / Social Media Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yacchi.com/MusicMap/viewer.html">
+    <meta property="og:title" content="Music Map - Song Location" id="og-title">
+    <meta property="og:description" content="View this song's location on Music Map with album artwork and solar time colors.">
+    <meta property="og:image" content="https://yacchi.com/MusicMap/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://yacchi.com/MusicMap/viewer.html">
+    <meta name="twitter:title" content="Music Map - Song Location" id="twitter-title">
+    <meta name="twitter:description" content="View this song's location on Music Map with album artwork and solar time colors.">
+    <meta name="twitter:image" content="https://yacchi.com/MusicMap/og-image.png">
+    
+    <script>
+        // Update OG tags dynamically with song info from URL parameters
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const song = params.get('song') || 'Unknown Song';
+            const artist = params.get('artist') || 'Unknown Artist';
+            const title = `${song} by ${artist} - Music Map`;
+            
+            // Update page title
+            document.title = title;
+            
+            // Update OG and Twitter meta tags
+            const ogTitle = document.getElementById('og-title');
+            const twitterTitle = document.getElementById('twitter-title');
+            if (ogTitle) ogTitle.setAttribute('content', title);
+            if (twitterTitle) twitterTitle.setAttribute('content', title);
+        })();
+    </script>
     
     <style>
         * {
@@ -618,7 +654,7 @@
                 circle.setAttribute("filter", "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3))");
                 svg.appendChild(circle);
                 
-                // Create music note (♪) in white
+                // Create music note (â™ª) in white
                 const text = document.createElementNS(svgNS, "text");
                 text.setAttribute("x", "25");
                 text.setAttribute("y", "25");
@@ -627,7 +663,7 @@
                 text.setAttribute("fill", "white");
                 text.setAttribute("font-size", "20");
                 text.setAttribute("font-weight", "600");
-                text.textContent = "♪";
+                text.textContent = "â™ª";
                 svg.appendChild(text);
                 
                 // Convert SVG to data URL (use encodeURIComponent for Unicode support)
