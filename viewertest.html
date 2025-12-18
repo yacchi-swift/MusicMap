@@ -463,7 +463,7 @@
             'night': 'Night'
         };
 
-        // Format date - auto-detect locale and format accordingly
+        // Format date - auto-detect user's time format preference
         function formatDate(isoDate) {
             // Parse ISO date string manually to avoid timezone conversion
             // Expected format: 2025-12-15T10:30:00Z or 2025-12-15T10:30:00
@@ -474,11 +474,14 @@
             const [hours, minutes] = timePart.split(':');
             const hour24 = parseInt(hours);
             
-            // Detect user's locale
-            const userLocale = navigator.language || navigator.userLanguage || 'en-US';
+            // Get user's timezone
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             
-            // Determine if user is from US (use 12-hour) or Japan/Europe (use 24-hour)
-            const use24Hour = !userLocale.startsWith('en-US');
+            // Detect if user prefers 12-hour or 24-hour format based on timezone
+            // US/Canada typically use 12-hour, most other regions use 24-hour
+            const usesAmPm = userTimezone.startsWith('America/') || 
+                            userTimezone.startsWith('US/') ||
+                            userTimezone.startsWith('Canada/');
             
             // Month names
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -486,14 +489,14 @@
             const monthName = monthNames[parseInt(month) - 1];
             
             let formatted;
-            if (use24Hour) {
-                // 24-hour format for Japan, Europe, etc.
-                formatted = `${monthName} ${parseInt(day)}, ${year} at ${hours}:${minutes}`;
-            } else {
-                // 12-hour format with AM/PM for US
+            if (usesAmPm) {
+                // 12-hour format with AM/PM for US/Canada
                 const hour12 = hour24 === 0 ? 12 : (hour24 > 12 ? hour24 - 12 : hour24);
                 const ampm = hour24 >= 12 ? 'PM' : 'AM';
                 formatted = `${monthName} ${parseInt(day)}, ${year} at ${hour12}:${minutes} ${ampm}`;
+            } else {
+                // 24-hour format for Japan, Europe, etc.
+                formatted = `${monthName} ${parseInt(day)}, ${year} at ${hours}:${minutes}`;
             }
             
             return formatted;
