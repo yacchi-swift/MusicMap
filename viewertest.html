@@ -702,12 +702,62 @@
                 svg.setAttribute("viewBox", "0 0 120 80");
                 
                 
-                // Create circle with solid color (no gradient) to match iOS better
+                // Create gradient definition matching iOS (.gradient effect)
+                const defs = document.createElementNS(svgNS, "defs");
+                const gradient = document.createElementNS(svgNS, "linearGradient");
+                gradient.setAttribute("id", "pinGradient");
+                gradient.setAttribute("x1", "0%");
+                gradient.setAttribute("y1", "0%");
+                gradient.setAttribute("x2", "0%");
+                gradient.setAttribute("y2", "100%");
+                
+                // Parse the base color to RGB
+                const hex = solarColor.replace('#', '');
+                const r = parseInt(hex.substr(0, 2), 16) / 255;
+                const g = parseInt(hex.substr(2, 2), 16) / 255;
+                const b = parseInt(hex.substr(4, 2), 16) / 255;
+                
+                // iOS gradient formula:
+                // Top: 20% brighter (multiply by 1.2, max 1.0)
+                const lighterR = Math.min(r * 1.2, 1.0);
+                const lighterG = Math.min(g * 1.2, 1.0);
+                const lighterB = Math.min(b * 1.2, 1.0);
+                const lighterColor = `rgb(${Math.round(lighterR * 255)}, ${Math.round(lighterG * 255)}, ${Math.round(lighterB * 255)})`;
+                
+                // Middle: Normal color (at 50%)
+                const middleColor = `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+                
+                // Bottom: 10% darker (multiply by 0.9)
+                const darkerR = r * 0.9;
+                const darkerG = g * 0.9;
+                const darkerB = b * 0.9;
+                const darkerColor = `rgb(${Math.round(darkerR * 255)}, ${Math.round(darkerG * 255)}, ${Math.round(darkerB * 255)})`;
+                
+                // Three-stop gradient: lighter -> normal -> darker
+                const stop1 = document.createElementNS(svgNS, "stop");
+                stop1.setAttribute("offset", "0%");
+                stop1.setAttribute("stop-color", lighterColor);
+                
+                const stop2 = document.createElementNS(svgNS, "stop");
+                stop2.setAttribute("offset", "50%");
+                stop2.setAttribute("stop-color", middleColor);
+                
+                const stop3 = document.createElementNS(svgNS, "stop");
+                stop3.setAttribute("offset", "100%");
+                stop3.setAttribute("stop-color", darkerColor);
+                
+                gradient.appendChild(stop1);
+                gradient.appendChild(stop2);
+                gradient.appendChild(stop3);
+                defs.appendChild(gradient);
+                svg.appendChild(defs);
+                
+                // Create circle with gradient matching iOS
                 const circle = document.createElementNS(svgNS, "circle");
                 circle.setAttribute("cx", "60");
                 circle.setAttribute("cy", "25");
                 circle.setAttribute("r", "25");
-                circle.setAttribute("fill", solarColor);
+                circle.setAttribute("fill", "url(#pinGradient)");
                 circle.setAttribute("filter", "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3))");
                 svg.appendChild(circle);
                 
