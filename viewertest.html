@@ -863,8 +863,8 @@
                 const svgNS = "http://www.w3.org/2000/svg";
                 const svg = document.createElementNS(svgNS, "svg");
                 svg.setAttribute("width", "120");
-                svg.setAttribute("height", "80");
-                svg.setAttribute("viewBox", "0 0 120 80");
+                svg.setAttribute("height", "85");
+                svg.setAttribute("viewBox", "0 0 120 85");
                 
                 
                 // Create gradient definition matching iOS (.gradient effect)
@@ -925,22 +925,22 @@
                 circle.setAttribute("filter", "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3))");
                 svg.appendChild(circle);
                 
-                // Create music note in white - bigger to match iOS app
+                // Create music note in white - bigger for better visibility
                 const musicNote = document.createElementNS(svgNS, "text");
                 musicNote.setAttribute("x", "60");
                 musicNote.setAttribute("y", "25");
                 musicNote.setAttribute("text-anchor", "middle");
                 musicNote.setAttribute("dominant-baseline", "central");
                 musicNote.setAttribute("fill", "white");
-                musicNote.setAttribute("font-size", "24");
+                musicNote.setAttribute("font-size", "28");
                 musicNote.setAttribute("font-weight", "600");
                 musicNote.textContent = "\u266A";
                 svg.appendChild(musicNote);
                 
-                // Add song name label below the circle with stroke border
+                // Add song name label below the circle with stroke border (larger margin)
                 const songLabel = document.createElementNS(svgNS, "text");
                 songLabel.setAttribute("x", "60");
-                songLabel.setAttribute("y", "60");
+                songLabel.setAttribute("y", "68");
                 songLabel.setAttribute("text-anchor", "middle");
                 songLabel.setAttribute("fill", textColor);
                 songLabel.setAttribute("stroke", strokeColor);
