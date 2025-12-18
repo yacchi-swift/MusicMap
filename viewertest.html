@@ -666,7 +666,7 @@
                 const displaySongName = params.song.length > 20 ? params.song.substring(0, 17) + '...' : params.song;
                 
                 // Determine text color and stroke based on theme
-                const currentTheme = document.documentElement.getAttribute('data-theme');
+                // Reuse currentTheme from above
                 let textColor, strokeColor;
                 if (currentTheme === 'dark') {
                     textColor = '#ffffff';  // white text
