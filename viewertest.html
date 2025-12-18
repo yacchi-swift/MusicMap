@@ -51,13 +51,13 @@
         }
 
         :root {
-            --deep-night: #1a3366;
-            --before-sunrise: #4a6fa5;
-            --sunrise: #ff8c42;
-            --day: #ffd966;
-            --before-sunset: #ff9a56;
-            --sunset: #ff6b6b;
-            --night: #2d3e5f;
+            --deep-night: #19337f;
+            --before-sunrise: #667f99;
+            --sunrise: #ffb233;
+            --day: #ffcc33;
+            --before-sunset: #ff994c;
+            --sunset: #ff994c;
+            --night: #66667f;
             --blue: #007AFF;
         }
 
@@ -442,14 +442,15 @@
         const params = getUrlParams();
 
         // Solar time color mapping
+        // Solar time color mapping - EXACT iOS colors from MapView.swift
         const solarColors = {
-            'deep-night': '#1a3366',
-            'before-sunrise': '#4a6fa5',
-            'sunrise': '#ff8c42',
-            'day': '#ffd966',
-            'before-sunset': '#ff9a56',
-            'sunset': '#ff6b6b',
-            'night': '#2d3e5f'
+            'deep-night': '#19337f',      // rgb(0.1, 0.2, 0.5)
+            'before-sunrise': '#667f99',  // rgb(0.4, 0.5, 0.6) - end of transition
+            'sunrise': '#ffb233',         // rgb(1.0, 0.7, 0.2) - end of transition
+            'day': '#ffcc33',             // rgb(1.0, 0.8, 0.2)
+            'before-sunset': '#ff994c',   // rgb(1.0, 0.6, 0.3) - end of transition
+            'sunset': '#ff994c',          // rgb(1.0, 0.6, 0.3) - warm orange (start of sunset)
+            'night': '#66667f'            // rgb(0.4, 0.4, 0.5)
         };
 
         // Solar time name mapping
@@ -700,36 +701,13 @@
                 svg.setAttribute("height", "80");
                 svg.setAttribute("viewBox", "0 0 120 80");
                 
-                // Create gradient definition
-                const defs = document.createElementNS(svgNS, "defs");
-                const gradient = document.createElementNS(svgNS, "linearGradient");
-                gradient.setAttribute("id", "pinGradient");
-                gradient.setAttribute("x1", "0%");
-                gradient.setAttribute("y1", "0%");
-                gradient.setAttribute("x2", "0%");
-                gradient.setAttribute("y2", "100%");
                 
-                const stop1 = document.createElementNS(svgNS, "stop");
-                stop1.setAttribute("offset", "0%");
-                stop1.setAttribute("stop-color", solarColor);
-                stop1.setAttribute("stop-opacity", "1");
-                
-                const stop2 = document.createElementNS(svgNS, "stop");
-                stop2.setAttribute("offset", "100%");
-                stop2.setAttribute("stop-color", solarColor);
-                stop2.setAttribute("stop-opacity", "0.8");
-                
-                gradient.appendChild(stop1);
-                gradient.appendChild(stop2);
-                defs.appendChild(gradient);
-                svg.appendChild(defs);
-                
-                // Create circle with gradient and shadow (centered in wider SVG)
+                // Create circle with solid color (no gradient) to match iOS better
                 const circle = document.createElementNS(svgNS, "circle");
                 circle.setAttribute("cx", "60");
                 circle.setAttribute("cy", "25");
                 circle.setAttribute("r", "25");
-                circle.setAttribute("fill", "url(#pinGradient)");
+                circle.setAttribute("fill", solarColor);
                 circle.setAttribute("filter", "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3))");
                 svg.appendChild(circle);
                 
