@@ -632,6 +632,19 @@
 
                 const solarColor = solarColors[params.solarTime] || solarColors['day'];
                 
+                // Determine map color scheme based on theme
+                let mapColorScheme = 'light';
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                if (currentTheme === 'dark') {
+                    mapColorScheme = 'dark';
+                } else if (currentTheme === 'light') {
+                    mapColorScheme = 'light';
+                } else {
+                    // Auto mode - check system preference
+                    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    mapColorScheme = isDark ? 'dark' : 'light';
+                }
+                
                 const map = new mapkit.Map("map", {
                     center: new mapkit.Coordinate(params.lat, params.lon),
                     region: new mapkit.CoordinateRegion(
@@ -639,6 +652,7 @@
                         new mapkit.CoordinateSpan(0.01, 0.01)
                     ),
                     mapType: mapkit.Map.MapTypes.Standard,
+                    colorScheme: mapColorScheme,
                     showsMapTypeControl: false,
                     showsZoomControl: false,
                     showsUserLocationControl: false,
@@ -650,6 +664,27 @@
                 
                 // Truncate song name if too long
                 const displaySongName = params.song.length > 20 ? params.song.substring(0, 17) + '...' : params.song;
+                
+                // Determine text color and stroke based on theme
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                let textColor, strokeColor;
+                if (currentTheme === 'dark') {
+                    textColor = '#ffffff';  // white text
+                    strokeColor = '#000000';  // black stroke
+                } else if (currentTheme === 'light') {
+                    textColor = '#000000';  // black text
+                    strokeColor = '#ffffff';  // white stroke
+                } else {
+                    // Auto mode - check system preference
+                    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (isDark) {
+                        textColor = '#ffffff';
+                        strokeColor = '#000000';
+                    } else {
+                        textColor = '#000000';
+                        strokeColor = '#ffffff';
+                    }
+                }
                 
                 // Create SVG matching iOS pin: circle with gradient + white music note + song name label
                 const svgNS = "http://www.w3.org/2000/svg";
@@ -691,39 +726,32 @@
                 circle.setAttribute("filter", "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3))");
                 svg.appendChild(circle);
                 
-                // Create music note in white
+                // Create music note in white - bigger to match iOS app
                 const musicNote = document.createElementNS(svgNS, "text");
                 musicNote.setAttribute("x", "60");
                 musicNote.setAttribute("y", "25");
                 musicNote.setAttribute("text-anchor", "middle");
                 musicNote.setAttribute("dominant-baseline", "central");
                 musicNote.setAttribute("fill", "white");
-                musicNote.setAttribute("font-size", "20");
+                musicNote.setAttribute("font-size", "24");
                 musicNote.setAttribute("font-weight", "600");
                 musicNote.textContent = "\u266A";
                 svg.appendChild(musicNote);
                 
-                // Add song name label below the circle
+                // Add song name label below the circle with stroke border
                 const songLabel = document.createElementNS(svgNS, "text");
                 songLabel.setAttribute("x", "60");
                 songLabel.setAttribute("y", "60");
                 songLabel.setAttribute("text-anchor", "middle");
-                songLabel.setAttribute("fill", "#000000");
+                songLabel.setAttribute("fill", textColor);
+                songLabel.setAttribute("stroke", strokeColor);
+                songLabel.setAttribute("stroke-width", "3");
+                songLabel.setAttribute("paint-order", "stroke fill");
                 songLabel.setAttribute("font-size", "12");
-                songLabel.setAttribute("font-weight", "600");
+                songLabel.setAttribute("font-weight", "700");
                 songLabel.setAttribute("font-family", "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif");
                 songLabel.textContent = displaySongName;
                 svg.appendChild(songLabel);
-                
-                // Add white background for text readability
-                const textBg = document.createElementNS(svgNS, "rect");
-                textBg.setAttribute("x", "5");
-                textBg.setAttribute("y", "52");
-                textBg.setAttribute("width", "110");
-                textBg.setAttribute("height", "18");
-                textBg.setAttribute("fill", "rgba(255, 255, 255, 0.9)");
-                textBg.setAttribute("rx", "4");
-                svg.insertBefore(textBg, songLabel);
                 
                 // Convert SVG to data URL (use encodeURIComponent for Unicode support)
                 const svgString = new XMLSerializer().serializeToString(svg);
