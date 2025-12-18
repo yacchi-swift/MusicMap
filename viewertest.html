@@ -433,7 +433,6 @@
                 lat: parseFloat(params.get('lat')) || 35.6762,
                 lon: parseFloat(params.get('lon')) || 139.6503,
                 date: params.get('date') || null, // Don't default to current date
-                timezone: params.get('timezone') || null, // Timezone like "JST", "PST", "GMT+9"
                 solarTime: params.get('solarTime') || 'day',
                 albumArt: params.get('albumArt') || null,
                 theme: params.get('theme') || 'auto' // 'light', 'dark', or 'auto'
@@ -464,8 +463,8 @@
             'night': 'Night'
         };
 
-        // Format date - display exact time from parameter without conversion
-        function formatDate(isoDate, timezone) {
+        // Format date - auto-detect locale and format accordingly
+        function formatDate(isoDate) {
             // Parse ISO date string manually to avoid timezone conversion
             // Expected format: 2025-12-15T10:30:00Z or 2025-12-15T10:30:00
             const datePart = isoDate.split('T')[0];
@@ -473,23 +472,28 @@
             
             const [year, month, day] = datePart.split('-');
             const [hours, minutes] = timePart.split(':');
-            
-            // Convert to 12-hour format
             const hour24 = parseInt(hours);
-            const hour12 = hour24 === 0 ? 12 : (hour24 > 12 ? hour24 - 12 : hour24);
-            const ampm = hour24 >= 12 ? 'PM' : 'AM';
+            
+            // Detect user's locale
+            const userLocale = navigator.language || navigator.userLanguage || 'en-US';
+            
+            // Determine if user is from US (use 12-hour) or Japan/Europe (use 24-hour)
+            const use24Hour = !userLocale.startsWith('en-US');
             
             // Month names
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                               'July', 'August', 'September', 'October', 'November', 'December'];
             const monthName = monthNames[parseInt(month) - 1];
             
-            // Format: "December 15, 2025 at 10:30 AM JST"
-            let formatted = `${monthName} ${parseInt(day)}, ${year} at ${hour12}:${minutes} ${ampm}`;
-            
-            // Add timezone if provided
-            if (timezone) {
-                formatted += ` ${timezone}`;
+            let formatted;
+            if (use24Hour) {
+                // 24-hour format for Japan, Europe, etc.
+                formatted = `${monthName} ${parseInt(day)}, ${year} at ${hours}:${minutes}`;
+            } else {
+                // 12-hour format with AM/PM for US
+                const hour12 = hour24 === 0 ? 12 : (hour24 > 12 ? hour24 - 12 : hour24);
+                const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                formatted = `${monthName} ${parseInt(day)}, ${year} at ${hour12}:${minutes} ${ampm}`;
             }
             
             return formatted;
@@ -584,7 +588,7 @@
             // Only show date/time section if we have a date parameter
             if (params.date) {
                 // Set date & time
-                document.getElementById('dateTime').textContent = formatDate(params.date, params.timezone);
+                document.getElementById('dateTime').textContent = formatDate(params.date);
 
                 // Set solar time
                 const solarColor = solarColors[params.solarTime] || solarColors['day'];
