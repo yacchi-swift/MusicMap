@@ -51,21 +51,34 @@
         }
 
         :root {
-            --deep-night: #1a3366;
-            --before-sunrise: #4a6fa5;
-            --sunrise: #ff8c42;
-            --day: #ffd966;
-            --before-sunset: #ff9a56;
-            --sunset: #ff6b6b;
-            --night: #2d3e5f;
-            --system-gray6: #f2f2f7;
-            --label-color: #000000;
-            --secondary-label: #3c3c43;
+            --deep-night: #19337f;
+            --before-sunrise: #667f99;
+            --sunrise: #ffb233;
+            --day: #ffcc33;
+            --before-sunset: #ff994c;
+            --sunset: #ff994c;
+            --night: #66667f;
             --blue: #007AFF;
         }
 
+        /* Light mode colors */
+        :root,
+        [data-theme="light"] {
+            --system-gray6: #f2f2f7;
+            --label-color: #000000;
+            --secondary-label: #3c3c43;
+        }
+
+        /* Dark mode colors */
+        [data-theme="dark"] {
+            --system-gray6: #1c1c1e;
+            --label-color: #ffffff;
+            --secondary-label: #ebebf5;
+        }
+
+        /* Auto mode - use system preference */
         @media (prefers-color-scheme: dark) {
-            :root {
+            :root:not([data-theme]) {
                 --system-gray6: #1c1c1e;
                 --label-color: #ffffff;
                 --secondary-label: #ebebf5;
@@ -82,8 +95,12 @@
             margin: 0 auto;
         }
 
+        [data-theme="dark"] body {
+            background: #000000;
+        }
+
         @media (prefers-color-scheme: dark) {
-            body {
+            :root:not([data-theme]) body {
                 background: #000000;
             }
         }
@@ -99,8 +116,12 @@
             padding: 0;
         }
 
+        [data-theme="dark"] .header {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
         @media (prefers-color-scheme: dark) {
-            .header {
+            :root:not([data-theme]) .header {
                 background: rgba(0, 0, 0, 0.8);
             }
         }
@@ -412,38 +433,192 @@
                 lat: parseFloat(params.get('lat')) || 35.6762,
                 lon: parseFloat(params.get('lon')) || 139.6503,
                 date: params.get('date') || null, // Don't default to current date
-                timezone: params.get('timezone') || null, // Timezone like "JST", "PST", "GMT+9"
-                solarTime: params.get('solarTime') || 'day',
-                albumArt: params.get('albumArt') || null
+                albumArt: params.get('albumArt') || null,
+                theme: params.get('theme') || 'auto' // 'light', 'dark', or 'auto'
             };
         }
 
         const params = getUrlParams();
 
-        // Solar time color mapping
-        const solarColors = {
-            'deep-night': '#1a3366',
-            'before-sunrise': '#4a6fa5',
-            'sunrise': '#ff8c42',
-            'day': '#ffd966',
-            'before-sunset': '#ff9a56',
-            'sunset': '#ff6b6b',
-            'night': '#2d3e5f'
-        };
+        // Solar Time Calculator - ported from iOS SolarTime.swift
+        class SolarTime {
+            constructor(date, latitude, longitude) {
+                this.date = date;
+                this.latitude = latitude;
+                this.longitude = longitude;
+            }
 
-        // Solar time name mapping
-        const solarNames = {
-            'deep-night': 'Deep Night',
-            'before-sunrise': 'Before Sunrise',
-            'sunrise': 'Sunrise',
-            'day': 'Day',
-            'before-sunset': 'Before Sunset',
-            'sunset': 'Sunset',
-            'night': 'Night'
-        };
+            // Calculate sunrise and sunset times
+            getSolarTimes() {
+                const dayOfYear = this.getDayOfYear(this.date);
+                
+                // Convert latitude to radians
+                const latRad = this.latitude * Math.PI / 180.0;
+                
+                // Calculate solar declination
+                const declinationAngle = 23.45 * Math.sin((360.0 / 365.0) * (dayOfYear - 81) * Math.PI / 180.0);
+                const declinationRad = declinationAngle * Math.PI / 180.0;
+                
+                // Calculate hour angle
+                const cosHourAngle = -Math.tan(latRad) * Math.tan(declinationRad);
+                
+                let hourAngle;
+                // Check if sun rises/sets (polar regions)
+                if (cosHourAngle > 1.0) {
+                    // Polar night
+                    return { sunrise: 12.0, sunset: 12.0 };
+                } else if (cosHourAngle < -1.0) {
+                    // Polar day
+                    return { sunrise: 0.0, sunset: 24.0 };
+                } else {
+                    hourAngle = Math.acos(cosHourAngle) * 180.0 / Math.PI;
+                }
+                
+                // Calculate sunrise and sunset in decimal hours (UTC)
+                const solarNoonUTC = 12.0 - (this.longitude / 15.0);
+                let sunriseUTC = solarNoonUTC - (hourAngle / 15.0);
+                let sunsetUTC = solarNoonUTC + (hourAngle / 15.0);
+                
+                // Convert to local time
+                const timezoneOffset = this.date.getTimezoneOffset() / -60; // Convert to hours
+                let sunrise = sunriseUTC + timezoneOffset;
+                let sunset = sunsetUTC + timezoneOffset;
+                
+                // Normalize to 0-24 range
+                if (sunrise < 0) sunrise += 24;
+                if (sunrise >= 24) sunrise -= 24;
+                if (sunset < 0) sunset += 24;
+                if (sunset >= 24) sunset -= 24;
+                
+                return { sunrise, sunset };
+            }
+            
+            // Get day of year (1-365)
+            getDayOfYear(date) {
+                const start = new Date(date.getFullYear(), 0, 0);
+                const diff = date - start;
+                const oneDay = 1000 * 60 * 60 * 24;
+                return Math.floor(diff / oneDay);
+            }
+        }
 
-        // Format date - display exact time from parameter without conversion
-        function formatDate(isoDate, timezone) {
+        // Calculate time color - ported from iOS MapView.swift extension
+        function calculateTimeColor(date, latitude, longitude) {
+            const hour = date.getHours();
+            const minute = date.getMinutes();
+            const hourWithMinutes = hour + (minute / 60.0);
+            
+            // Calculate sunrise and sunset times for the logged location
+            const solarTime = new SolarTime(date, latitude, longitude);
+            const { sunrise, sunset } = solarTime.getSolarTimes();
+            
+            // Define time periods based on solar times
+            const sunriseStart = Math.max(sunrise - 1.5, 0);
+            const sunriseEnd = sunrise + 1.0;
+            const sunsetStart = sunset - 1.0;
+            const sunsetEnd = Math.min(sunset + 1.5, 24);
+            
+            // Determine color based on solar position
+            if (hourWithMinutes >= 0 && hourWithMinutes < sunriseStart) {
+                // Deep night (before sunrise transition)
+                return { r: 0.1, g: 0.2, b: 0.5 };
+                
+            } else if (hourWithMinutes >= sunriseStart && hourWithMinutes < sunrise) {
+                // Pre-sunrise transition (dark blue to lighter blue)
+                const progress = (hourWithMinutes - sunriseStart) / (sunrise - sunriseStart);
+                return {
+                    r: 0.1 + (0.3 * progress),    // 0.1 -> 0.4
+                    g: 0.2 + (0.3 * progress),    // 0.2 -> 0.5
+                    b: 0.5 + (0.1 * progress)     // 0.5 -> 0.6
+                };
+                
+            } else if (hourWithMinutes >= sunrise && hourWithMinutes < sunriseEnd) {
+                // Sunrise transition (blue to orange)
+                const progress = (hourWithMinutes - sunrise) / (sunriseEnd - sunrise);
+                return {
+                    r: 0.4 + (0.6 * progress),    // 0.4 -> 1.0
+                    g: 0.5 + (0.2 * progress),    // 0.5 -> 0.7
+                    b: 0.6 - (0.4 * progress)     // 0.6 -> 0.2
+                };
+                
+            } else if (hourWithMinutes >= sunriseEnd && hourWithMinutes < sunsetStart) {
+                // Full daylight (bright orange/yellow)
+                return { r: 1.0, g: 0.8, b: 0.2 };
+                
+            } else if (hourWithMinutes >= sunsetStart && hourWithMinutes < sunset) {
+                // Pre-sunset transition (bright to warm orange)
+                const progress = (hourWithMinutes - sunsetStart) / (sunset - sunsetStart);
+                return {
+                    r: 1.0,
+                    g: 0.8 - (0.2 * progress),    // 0.8 -> 0.6
+                    b: 0.2 + (0.1 * progress)     // 0.2 -> 0.3
+                };
+                
+            } else if (hourWithMinutes >= sunset && hourWithMinutes < sunsetEnd) {
+                // Sunset transition (orange to blue)
+                const progress = (hourWithMinutes - sunset) / (sunsetEnd - sunset);
+                return {
+                    r: 1.0 - (0.6 * progress),    // 1.0 -> 0.4
+                    g: 0.6 - (0.2 * progress),    // 0.6 -> 0.4
+                    b: 0.3 + (0.2 * progress)     // 0.3 -> 0.5
+                };
+                
+            } else if (hourWithMinutes >= sunsetEnd && hourWithMinutes < 24) {
+                // Night (after sunset transition)
+                const progress = (hourWithMinutes - sunsetEnd) / (24 - sunsetEnd);
+                return {
+                    r: 0.4 - (0.3 * progress),    // 0.4 -> 0.1
+                    g: 0.4 - (0.2 * progress),    // 0.4 -> 0.2
+                    b: 0.5
+                };
+            }
+            
+            // Default (should never reach here)
+            return { r: 0.1, g: 0.2, b: 0.5 };
+        }
+
+        // Get time of day description (for display)
+        function getTimeOfDayDescription(date, latitude, longitude) {
+            const hour = date.getHours();
+            const minute = date.getMinutes();
+            const hourWithMinutes = hour + (minute / 60.0);
+            
+            const solarTime = new SolarTime(date, latitude, longitude);
+            const { sunrise, sunset } = solarTime.getSolarTimes();
+            
+            const sunriseStart = Math.max(sunrise - 1.5, 0);
+            const sunriseEnd = sunrise + 1.0;
+            const sunsetStart = sunset - 1.0;
+            const sunsetEnd = Math.min(sunset + 1.5, 24);
+            
+            if (hourWithMinutes >= 0 && hourWithMinutes < sunriseStart) {
+                return "Deep Night";
+            } else if (hourWithMinutes >= sunriseStart && hourWithMinutes < sunrise) {
+                return "Before Sunrise";
+            } else if (hourWithMinutes >= sunrise && hourWithMinutes < sunriseEnd) {
+                return "Sunrise";
+            } else if (hourWithMinutes >= sunriseEnd && hourWithMinutes < sunsetStart) {
+                return "Day";
+            } else if (hourWithMinutes >= sunsetStart && hourWithMinutes < sunset) {
+                return "Before Sunset";
+            } else if (hourWithMinutes >= sunset && hourWithMinutes < sunsetEnd) {
+                return "Sunset";
+            } else {
+                return "Night";
+            }
+        }
+
+        // Convert RGB (0-1) to hex color
+        function rgbToHex(r, g, b) {
+            const toHex = (val) => {
+                const hex = Math.round(val * 255).toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            };
+            return '#' + toHex(r) + toHex(g) + toHex(b);
+        }
+
+        // Format date - auto-detect user's time format preference
+        function formatDate(isoDate) {
             // Parse ISO date string manually to avoid timezone conversion
             // Expected format: 2025-12-15T10:30:00Z or 2025-12-15T10:30:00
             const datePart = isoDate.split('T')[0];
@@ -451,23 +626,31 @@
             
             const [year, month, day] = datePart.split('-');
             const [hours, minutes] = timePart.split(':');
-            
-            // Convert to 12-hour format
             const hour24 = parseInt(hours);
-            const hour12 = hour24 === 0 ? 12 : (hour24 > 12 ? hour24 - 12 : hour24);
-            const ampm = hour24 >= 12 ? 'PM' : 'AM';
+            
+            // Get user's timezone
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            
+            // Detect if user prefers 12-hour or 24-hour format based on timezone
+            // US/Canada typically use 12-hour, most other regions use 24-hour
+            const usesAmPm = userTimezone.startsWith('America/') || 
+                            userTimezone.startsWith('US/') ||
+                            userTimezone.startsWith('Canada/');
             
             // Month names
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                               'July', 'August', 'September', 'October', 'November', 'December'];
             const monthName = monthNames[parseInt(month) - 1];
             
-            // Format: "December 15, 2025 at 10:30 AM JST"
-            let formatted = `${monthName} ${parseInt(day)}, ${year} at ${hour12}:${minutes} ${ampm}`;
-            
-            // Add timezone if provided
-            if (timezone) {
-                formatted += ` ${timezone}`;
+            let formatted;
+            if (usesAmPm) {
+                // 12-hour format with AM/PM for US/Canada
+                const hour12 = hour24 === 0 ? 12 : (hour24 > 12 ? hour24 - 12 : hour24);
+                const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                formatted = `${monthName} ${parseInt(day)}, ${year} at ${hour12}:${minutes} ${ampm}`;
+            } else {
+                // 24-hour format for Japan, Europe, etc.
+                formatted = `${monthName} ${parseInt(day)}, ${year} at ${hours}:${minutes}`;
             }
             
             return formatted;
@@ -508,6 +691,18 @@
 
         // Initialize page
         async function init() {
+            // Apply theme
+            const theme = params.theme;
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                // Auto mode - use system preference
+                const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            }
+            
             // Set song info
             document.getElementById('songName').textContent = params.song;
             document.getElementById('artistName').textContent = params.artist;
@@ -550,11 +745,14 @@
             // Only show date/time section if we have a date parameter
             if (params.date) {
                 // Set date & time
-                document.getElementById('dateTime').textContent = formatDate(params.date, params.timezone);
+                document.getElementById('dateTime').textContent = formatDate(params.date);
 
-                // Set solar time
-                const solarColor = solarColors[params.solarTime] || solarColors['day'];
-                const solarName = solarNames[params.solarTime] || 'Day';
+                // Calculate solar time color dynamically based on date and location
+                const logDate = new Date(params.date);
+                const colorRGB = calculateTimeColor(logDate, params.lat, params.lon);
+                const solarColor = rgbToHex(colorRGB.r, colorRGB.g, colorRGB.b);
+                const solarName = getTimeOfDayDescription(logDate, params.lat, params.lon);
+                
                 document.getElementById('solarCircle').style.background = solarColor;
                 document.getElementById('solarTime').textContent = solarName;
                 
@@ -596,7 +794,29 @@
                     }
                 });
 
-                const solarColor = solarColors[params.solarTime] || solarColors['day'];
+                // Calculate solar time color dynamically based on date and location
+                let colorRGB;
+                if (params.date) {
+                    const logDate = new Date(params.date);
+                    colorRGB = calculateTimeColor(logDate, params.lat, params.lon);
+                } else {
+                    // No date provided, use default Day color
+                    colorRGB = { r: 1.0, g: 0.8, b: 0.2 };
+                }
+                const solarColor = rgbToHex(colorRGB.r, colorRGB.g, colorRGB.b);
+                
+                // Determine map color scheme based on theme
+                let mapColorScheme = 'light';
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                if (currentTheme === 'dark') {
+                    mapColorScheme = 'dark';
+                } else if (currentTheme === 'light') {
+                    mapColorScheme = 'light';
+                } else {
+                    // Auto mode - check system preference
+                    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    mapColorScheme = isDark ? 'dark' : 'light';
+                }
                 
                 const map = new mapkit.Map("map", {
                     center: new mapkit.Coordinate(params.lat, params.lon),
@@ -605,6 +825,7 @@
                         new mapkit.CoordinateSpan(0.01, 0.01)
                     ),
                     mapType: mapkit.Map.MapTypes.Standard,
+                    colorScheme: mapColorScheme,
                     showsMapTypeControl: false,
                     showsZoomControl: false,
                     showsUserLocationControl: false,
@@ -614,14 +835,39 @@
                 // Create custom annotation matching iOS DetailView design
                 const coordinate = new mapkit.Coordinate(params.lat, params.lon);
                 
-                // Create SVG matching iOS pin: circle with gradient + white music note
+                // Truncate song name if too long
+                const displaySongName = params.song.length > 20 ? params.song.substring(0, 17) + '...' : params.song;
+                
+                // Determine text color and stroke based on theme
+                // Reuse currentTheme from above
+                let textColor, strokeColor;
+                if (currentTheme === 'dark') {
+                    textColor = '#ffffff';  // white text
+                    strokeColor = '#000000';  // black stroke
+                } else if (currentTheme === 'light') {
+                    textColor = '#000000';  // black text
+                    strokeColor = '#ffffff';  // white stroke
+                } else {
+                    // Auto mode - check system preference
+                    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (isDark) {
+                        textColor = '#ffffff';
+                        strokeColor = '#000000';
+                    } else {
+                        textColor = '#000000';
+                        strokeColor = '#ffffff';
+                    }
+                }
+                
+                // Create SVG matching iOS pin: circle with gradient + white music note + song name label
                 const svgNS = "http://www.w3.org/2000/svg";
                 const svg = document.createElementNS(svgNS, "svg");
-                svg.setAttribute("width", "50");
-                svg.setAttribute("height", "50");
-                svg.setAttribute("viewBox", "0 0 50 50");
+                svg.setAttribute("width", "120");
+                svg.setAttribute("height", "85");
+                svg.setAttribute("viewBox", "0 0 120 85");
                 
-                // Create gradient definition
+                
+                // Create gradient definition matching iOS (.gradient effect)
                 const defs = document.createElementNS(svgNS, "defs");
                 const gradient = document.createElementNS(svgNS, "linearGradient");
                 gradient.setAttribute("id", "pinGradient");
@@ -630,41 +876,81 @@
                 gradient.setAttribute("x2", "0%");
                 gradient.setAttribute("y2", "100%");
                 
+                // Use the RGB values we already calculated
+                const r = colorRGB.r;
+                const g = colorRGB.g;
+                const b = colorRGB.b;
+                
+                // iOS gradient formula:
+                // Top: 20% brighter (multiply by 1.2, max 1.0)
+                const lighterR = Math.min(r * 1.2, 1.0);
+                const lighterG = Math.min(g * 1.2, 1.0);
+                const lighterB = Math.min(b * 1.2, 1.0);
+                const lighterColor = `rgb(${Math.round(lighterR * 255)}, ${Math.round(lighterG * 255)}, ${Math.round(lighterB * 255)})`;
+                
+                // Middle: Normal color (at 50%)
+                const middleColor = `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+                
+                // Bottom: 10% darker (multiply by 0.9)
+                const darkerR = r * 0.9;
+                const darkerG = g * 0.9;
+                const darkerB = b * 0.9;
+                const darkerColor = `rgb(${Math.round(darkerR * 255)}, ${Math.round(darkerG * 255)}, ${Math.round(darkerB * 255)})`;
+                
+                // Three-stop gradient: lighter -> normal -> darker
                 const stop1 = document.createElementNS(svgNS, "stop");
                 stop1.setAttribute("offset", "0%");
-                stop1.setAttribute("stop-color", solarColor);
-                stop1.setAttribute("stop-opacity", "1");
+                stop1.setAttribute("stop-color", lighterColor);
                 
                 const stop2 = document.createElementNS(svgNS, "stop");
-                stop2.setAttribute("offset", "100%");
-                stop2.setAttribute("stop-color", solarColor);
-                stop2.setAttribute("stop-opacity", "0.8");
+                stop2.setAttribute("offset", "50%");
+                stop2.setAttribute("stop-color", middleColor);
+                
+                const stop3 = document.createElementNS(svgNS, "stop");
+                stop3.setAttribute("offset", "100%");
+                stop3.setAttribute("stop-color", darkerColor);
                 
                 gradient.appendChild(stop1);
                 gradient.appendChild(stop2);
+                gradient.appendChild(stop3);
                 defs.appendChild(gradient);
                 svg.appendChild(defs);
                 
-                // Create circle with gradient and shadow
+                // Create circle with gradient matching iOS
                 const circle = document.createElementNS(svgNS, "circle");
-                circle.setAttribute("cx", "25");
+                circle.setAttribute("cx", "60");
                 circle.setAttribute("cy", "25");
                 circle.setAttribute("r", "25");
                 circle.setAttribute("fill", "url(#pinGradient)");
                 circle.setAttribute("filter", "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3))");
                 svg.appendChild(circle);
                 
-                // Create music note (♪) in white
-                const text = document.createElementNS(svgNS, "text");
-                text.setAttribute("x", "25");
-                text.setAttribute("y", "25");
-                text.setAttribute("text-anchor", "middle");
-                text.setAttribute("dominant-baseline", "central");
-                text.setAttribute("fill", "white");
-                text.setAttribute("font-size", "20");
-                text.setAttribute("font-weight", "600");
-                text.textContent = "♪";
-                svg.appendChild(text);
+                // Create music note in white - bigger for better visibility
+                const musicNote = document.createElementNS(svgNS, "text");
+                musicNote.setAttribute("x", "60");
+                musicNote.setAttribute("y", "25");
+                musicNote.setAttribute("text-anchor", "middle");
+                musicNote.setAttribute("dominant-baseline", "central");
+                musicNote.setAttribute("fill", "white");
+                musicNote.setAttribute("font-size", "28");
+                musicNote.setAttribute("font-weight", "600");
+                musicNote.textContent = "\u266A";
+                svg.appendChild(musicNote);
+                
+                // Add song name label below the circle with stroke border (larger margin)
+                const songLabel = document.createElementNS(svgNS, "text");
+                songLabel.setAttribute("x", "60");
+                songLabel.setAttribute("y", "68");
+                songLabel.setAttribute("text-anchor", "middle");
+                songLabel.setAttribute("fill", textColor);
+                songLabel.setAttribute("stroke", strokeColor);
+                songLabel.setAttribute("stroke-width", "3");
+                songLabel.setAttribute("paint-order", "stroke fill");
+                songLabel.setAttribute("font-size", "12");
+                songLabel.setAttribute("font-weight", "700");
+                songLabel.setAttribute("font-family", "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif");
+                songLabel.textContent = displaySongName;
+                svg.appendChild(songLabel);
                 
                 // Convert SVG to data URL (use encodeURIComponent for Unicode support)
                 const svgString = new XMLSerializer().serializeToString(svg);
@@ -673,7 +959,7 @@
                 // Create ImageAnnotation with custom SVG
                 const annotation = new mapkit.ImageAnnotation(coordinate, {
                     url: { 1: svgDataUrl },
-                    anchorOffset: new DOMPoint(0, -25),
+                    anchorOffset: new DOMPoint(0, -40),
                     title: params.song,
                     subtitle: params.artist
                 });
